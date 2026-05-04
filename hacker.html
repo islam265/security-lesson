@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة تحكم المخترق - سحب البيانات</title>
+    <style>
+        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
+        h1 { text-align: center; text-shadow: 0 0 10px #0f0; }
+        .console { background: #111; border: 1px solid #0f0; padding: 15px; height: 150px; overflow-y: scroll; margin-bottom: 20px; }
+        .gallery { display: none; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 20px; border: 2px dashed #0f0; border-radius: 10px; }
+        .gallery img { width: 100%; height: 150px; object-fit: cover; border: 2px solid #0f0; border-radius: 5px; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .scraping-text { animation: blink 0.5s step-start infinite; color: red; font-weight: bold; font-size: 1.2em; display: none;}
+    </style>
+</head>
+<body>
+
+    <h1>TERMINAL - DATA EXFILTRATION</h1>
+    
+    <div class="console" id="console">
+        <div>[SYSTEM] Awaiting target connection...</div>
+    </div>
+
+    <p class="scraping-text" id="statusText">جاري سحب ألبوم الصور... يرجى الانتظار</p>
+
+    <div class="gallery" id="gallery">
+        <img src="رابط_الصورة_الأولى_من_Glitch">
+        <img src="رابط_الصورة_الثانية_من_Glitch">
+        <img src="رابط_الصورة_الثالثة_من_Glitch">
+        <img src="رابط_الصورة_الرابعة_من_Glitch">
+        <img src="رابط_الصورة_الخامسة_من_Glitch">
+    </div>
+
+    <script>
+        // ضع نفس رابط الـ Webhook الذي وضعته في صفحة الطالب
+        // هامة جداً: يجب أن تستخدم رابط الـ API الخاص بـ Webhook.site
+        // والذي يكون شكله هكذا: https://webhook.site/token/XXXX/requests
+        const WEBHOOK_API_URL = "رابط_API_الخاص_بـ_WEBHOOK_SITE";
+
+        const consoleBox = document.getElementById('console');
+        const statusText = document.getElementById('statusText');
+        const gallery = document.getElementById('gallery');
+
+        function logToConsole(message) {
+            const entry = document.createElement('div');
+            entry.innerText = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleBox.appendChild(entry);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        // دالة للاستماع للـ Webhook (Polling)
+        async function checkRequests() {
+            try {
+                // هامة: الـ no-cors لا تصلح هنا، يجب أن يستقبل السيرفر الطلب
+                // Webhook.site يدعم الـ CORS تلقائياً عند طلب الـ API
+                const response = await fetch(WEBHOOK_API_URL);
+                const data = await response.json();
+                
+                // التحقق من آخر طلب وصل
+                if (data.data.length > 0) {
+                    const lastRequest = data.data[0];
+                    if (lastRequest.content === "START_SCRAPING") {
+                        // إيقاف التحديث، الفخ نجح
+                        clearInterval(pollingInterval);
+                        startScrapingSimulation();
+                    }
+                }
+            } catch (err) {
+                // في الغالب خطأ في الرابط أو المتصفح منع الطلب بسبب CORS
+                // إذا واجهتك مشكلة هنا سنعدل الطريقة غداً
+                console.error("خطأ في الاتصال بالـ Webhook:", err);
+            }
+        }
+
+        function startScrapingSimulation() {
+            logToConsole("Target connected. Signature: SpeedBoosterWeb");
+            logToConsole("Permission granted: STORAGE_ACCESS");
+            logToConsole("Starting file discovery...");
+            
+            setTimeout(() => {
+                logToConsole("Found: /sdcard/DCIM/Camera/");
+                logToConsole("Found: /sdcard/WhatsApp/Media/");
+                logToConsole("Attempting data exfiltration...");
+                statusText.style.display = "block";
+            }, 1500);
+
+            // إظهار الصور بعد فترة تمويه (كأنها وقت السحب)
+            setTimeout(() => {
+                statusText.style.display = "none";
+                logToConsole("Exfiltration complete. 5 files stored.");
+                gallery.style.display = "grid";
+            }, 4000);
+        }
+
+        // فحص الـ Webhook كل ثانيتين
+        const pollingInterval = setInterval(checkRequests, 2000);
+
+    </script>
+</body>
+</html>
